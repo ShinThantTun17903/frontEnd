@@ -174,7 +174,9 @@
                     })
                     .then(response => response.json())
                     .then(data => {
-                        alert(`Order completed! Order ID: ${data._id}`);
+                        if (data.msg === "Order created successfully") {
+                            alert(`Order completed! Order ID: ${data._id}`);
+                        }
                         this.cart = [];
                         this.registration = {
                             firstName: "",
