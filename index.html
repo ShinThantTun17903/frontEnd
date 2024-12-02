@@ -53,7 +53,6 @@
                 </div>
             </div>
 
-
             <div v-else>
                 <h2>Checkout</h2>
                 <ul>
@@ -99,6 +98,12 @@
                     <button type="button" v-on:click="toggleCheckout">Back to Classes</button>
                 </form>
             </div>
+
+            <!-- Confirmation Pop-up -->
+            <div v-if="confirmationMessage" class="confirmation-popup">
+                <p>{{ confirmationMessage }}</p>
+            </div>
+
         </main>
     </div>
 
@@ -122,6 +127,7 @@
                     zipCode: "",
                 },
                 sortOrder: "asc",  
+                confirmationMessage: "", // Store confirmation message
             },
             created() {
                 fetch("http://localhost:3000/collections/Lessons")
@@ -175,19 +181,27 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.msg === "Order created successfully") {
-                            alert(`Order completed! Order ID: ${data._id}`);
+                            // Short confirmation message with user's details
+                            this.confirmationMessage = `Confirmation sent to ${this.registration.firstName} ${this.registration.lastName} (${this.registration.email}, ${this.registration.phone})`;
+                            
+                            // Clear cart and reset registration form
+                            this.cart = [];
+                            this.registration = {
+                                firstName: "",
+                                lastName: "",
+                                email: "",
+                                phone: "",
+                                address: "",
+                                city: "",
+                                zipCode: "",
+                            };
+                            this.toggleCheckout();
+
+                            // Hide the confirmation message after 5 seconds
+                            setTimeout(() => {
+                                this.confirmationMessage = "";
+                            }, 5000);
                         }
-                        this.cart = [];
-                        this.registration = {
-                            firstName: "",
-                            lastName: "",
-                            email: "",
-                            phone: "",
-                            address: "",
-                            city: "",
-                            zipCode: "",
-                        };
-                        this.toggleCheckout();
                     })
                     .catch(error => {
                         console.error("Error:", error);
@@ -200,12 +214,12 @@
                         alert('${field} can only contain letters and spaces');
                     }
                 },
-                // validatePhone() {
-                //     const phoneRegExp = /^\d{10}$/;
-                //     if (!phoneRegExp.test(this.registration.phone)) {
-                //         alert("Phone number must be 10 digits.");
-                //     }
-                // },
+                validatePhone() {
+                     const phoneRegExp = /^\d{10}$/;
+                     if (!phoneRegExp.test(this.registration.phone)) {
+                         alert("Phone number must be 10 digits.");
+                     }
+                 },
                 sortLessons() {
                     this.lessons.sort((a, b) => {
                         let comparison = 0;
@@ -220,5 +234,6 @@
             }
         });
     </script>
+
 </body>
 </html>
