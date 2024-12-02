@@ -16,7 +16,6 @@
             </button>
         </header>
         <main>
-
             <div v-if="showClasses">
                 <div>
                     <label for="search"><strong>Search Classes:</strong></label>
@@ -79,7 +78,7 @@
                     </p>
                     <p>
                         <label for="phone"><strong>Phone Number:</strong></label>
-                        <input id="phone" v-model.trim="registration.phone" type="tel" required >
+                        <input id="phone" v-model.trim="registration.phone" type="tel" required @input="validatePhone" pattern="[0-9]*" title="Only numbers are allowed"/>
                     </p>
                     <p>
                         <label for="address"><strong>Address:</strong></label>
@@ -93,13 +92,11 @@
                         <label for="zipCode"><strong>Zip Code:</strong></label>
                         <input id="zipCode" v-model.trim="registration.zipCode" type="text" required>
                     </p>
-
-                    <button type="submit" :disabled="!isFormValid">Complete Checkout</button>
                     <button type="button" v-on:click="toggleCheckout">Back to Classes</button>
                 </form>
-            </div>
+                <button @click="completeCheckout" :disabled="!isFormValid || cart.length === 0">Complete Checkout</button>
 
-            <!-- Confirmation Pop-up -->
+            </div>
             <div v-if="confirmationMessage" class="confirmation-popup">
                 <p>{{ confirmationMessage }}</p>
             </div>
@@ -127,7 +124,7 @@
                     zipCode: "",
                 },
                 sortOrder: "asc",  
-                confirmationMessage: "", // Store confirmation message
+                confirmationMessage: "",
             },
             created() {
                 fetch("http://localhost:3000/collections/Lessons")
@@ -152,10 +149,25 @@
                     });
                 },
                 isFormValid() {
-                    return Object.values(this.registration).every(field => field.trim() !== '');
+                    const valid = Object.values(this.registration).every(field => field.trim() !== '');
+                    console.log('Is form valid?', valid); // Log form validation
+                    return valid;
                 }
             },
             methods: {
+                completeCheckout() {
+        if (this.cart.length > 0) {
+            this.cart.forEach(lesson => {
+                if (lesson.availablespace > 0) {
+                    
+                }
+            });
+            this.cart = [];
+            alert("Checkout completed! Spaces have been updated.");
+        } else {
+            alert("Your cart is empty!");
+        }
+    },
                 toggleCheckout() {
                     this.showClasses = !this.showClasses;
                 },
@@ -171,6 +183,8 @@
                     }
                 },
                 async submitCheckout() {
+                    console.log('Submitting checkout with data:', this.registration);
+
                     fetch("http://localhost:3000/collections/orders", {
                         method: "POST",
                         headers: {
@@ -180,11 +194,9 @@
                     })
                     .then(response => response.json())
                     .then(data => {
+                        console.log('Order response:', data);
                         if (data.msg === "Order created successfully") {
-                            // Short confirmation message with user's details
                             this.confirmationMessage = `Confirmation sent to ${this.registration.firstName} ${this.registration.lastName} (${this.registration.email}, ${this.registration.phone})`;
-                            
-                            // Clear cart and reset registration form
                             this.cart = [];
                             this.registration = {
                                 firstName: "",
@@ -196,8 +208,6 @@
                                 zipCode: "",
                             };
                             this.toggleCheckout();
-
-                            // Hide the confirmation message after 5 seconds
                             setTimeout(() => {
                                 this.confirmationMessage = "";
                             }, 5000);
@@ -211,15 +221,15 @@
                 validateName(field) {
                     const nameRegExp = /^[A-Za-z\s]+$/;
                     if (!nameRegExp.test(this.registration[field])) {
-                        alert('${field} can only contain letters and spaces');
+                        alert(`${field} can only contain letters and spaces`);
                     }
                 },
                 validatePhone() {
-                     const phoneRegExp = /^\d{10}$/;
-                     if (!phoneRegExp.test(this.registration.phone)) {
-                         alert("Phone number must be 10 digits.");
-                     }
-                 },
+                    const phoneRegExp = /^\d+$/;
+                    if (!phoneRegExp.test(this.registration.phone)) {
+                        alert("Phone number must only contain numbers.");
+                    }
+                },
                 sortLessons() {
                     this.lessons.sort((a, b) => {
                         let comparison = 0;
@@ -234,6 +244,5 @@
             }
         });
     </script>
-
 </body>
 </html>
