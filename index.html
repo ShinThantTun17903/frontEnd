@@ -185,7 +185,6 @@
                     .then(data => {
                     alert(`Checkout Complete! Order ID: ${data.orderId}`);
                     this.cart = [];
-                    this.resetForm();
                     this.toggleCheckout();
                     })
                     .catch(error => {
