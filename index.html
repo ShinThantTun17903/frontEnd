@@ -175,7 +175,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.msg === "Order created successfully") {
-                            alert(`Order completed! Order ID: ${data.orderId}`);
+                            alert(`Order completed! Order ID: ${data._id}`);
                         } else {
                             alert("Error in placing order.");
                         }
