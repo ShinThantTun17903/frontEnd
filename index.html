@@ -165,18 +165,36 @@
                     }
                 },
                 submitCheckout() {
-                    alert("Checkout Complete!");
-                    this.cart = [];
-                    this.registration = {
-                        firstName: "",
-                        lastName: "",
-                        email: "",
-                        phone: "",
-                        address: "",
-                        city: "",
-                        zipCode: "",
-                    };
-                    this.toggleCheckout();
+                    fetch("http://localhost:3000/collections/orders", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(this.registration)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.msg === "Order created successfully") {
+                            alert(`Order completed! Order ID: ${data.orderId}`);
+                        } else {
+                            alert("Error in placing order.");
+                        }
+                        this.cart = [];
+                        this.registration = {
+                            firstName: "",
+                            lastName: "",
+                            email: "",
+                            phone: "",
+                            address: "",
+                            city: "",
+                            zipCode: "",
+                        };
+                        this.toggleCheckout();
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        alert("An error occurred during checkout.");
+                    });
                 },
                 validateName(field) {
                     const nameRegExp = /^[A-Za-z\s]+$/;
