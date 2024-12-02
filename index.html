@@ -80,7 +80,7 @@
                     </p>
                     <p>
                         <label for="phone"><strong>Phone Number:</strong></label>
-                        <input id="phone" v-model.trim="registration.phone" type="tel" required @input="validatePhone">
+                        <input id="phone" v-model.trim="registration.phone" type="tel" required >
                     </p>
                     <p>
                         <label for="address"><strong>Address:</strong></label>
@@ -202,12 +202,12 @@
                         alert('${field} can only contain letters and spaces');
                     }
                 },
-                validatePhone() {
-                    const phoneRegExp = /^\d{10}$/;
-                    if (!phoneRegExp.test(this.registration.phone)) {
-                        alert("Phone number must be 10 digits.");
-                    }
-                },
+                // validatePhone() {
+                //     const phoneRegExp = /^\d{10}$/;
+                //     if (!phoneRegExp.test(this.registration.phone)) {
+                //         alert("Phone number must be 10 digits.");
+                //     }
+                // },
                 sortLessons() {
                     this.lessons.sort((a, b) => {
                         let comparison = 0;
