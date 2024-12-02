@@ -36,7 +36,7 @@
                         <option value="desc">Descending</option>
                     </select>
                 </div>
-                <div v-for="lesson in filteredLessons" :key="lesson.id" class="class-item">
+                <div v-for="lesson in filteredLessons" :key="lesson._id" class="class-item">
                     <figure>
                         <img v-bind:src="lesson.image" alt="Class Image">
                     </figure>
@@ -57,7 +57,7 @@
             <div v-else>
                 <h2>Checkout</h2>
                 <ul>
-                    <li v-for="lesson in cart" :key="lesson.id">
+                    <li v-for="lesson in cart" :key="lesson._id">
                         {{ lesson.subject }} - £{{ lesson.price }}
                         <button v-on:click="removeFromCart(lesson)">Remove</button>
                     </li>
@@ -164,7 +164,7 @@
                         lesson.availablespace++;
                     }
                 },
-                submitCheckout() {
+                async submitCheckout() {
                     fetch("http://localhost:3000/collections/orders", {
                         method: "POST",
                         headers: {
