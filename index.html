@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Martial Arts Academy</title>
+    <script src="https://unpkg.com/vue@2.7.8/dist/vue.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1 v-text="sitename"></h1>
+            <button v-on:click="toggleCheckout" :disabled="cartItemCount === 0">
+                {{ cartItemCount }} <span class="fas fa-shopping-cart"></span> View Cart
+            </button>
+        </header>
+        <main>
+
+            <div v-if="showClasses">
+                <div>
+                    <label for="search"><strong>Search Classes:</strong></label>
+                    <input id="search" type="text" v-model="searchQuery" placeholder="Search by Subject or Location" />
+                </div>
+                <div>
+                    <label for="sortBy"><strong>Sort By:</strong></label>
+                    <select id="sortBy" v-model="sortKey" @change="sortLessons">
+                        <option value="subject">Subject</option>
+                        <option value="location">Location</option>
+                        <option value="price">Price</option>
+                        <option value="availablespace">Spaces</option>
+                    </select>
+                    <label for="sortOrder"><strong>Order:</strong></label>
+                    <select id="sortOrder" v-model="sortOrder" @change="sortLessons">
+                        <option value="asc">Ascending</option>
+                        <option value="desc">Descending</option>
+                    </select>
+                </div>
+                <div v-for="lesson in filteredLessons" :key="lesson.id" class="class-item">
+                    <figure>
+                        <img v-bind:src="lesson.image" alt="Class Image">
+                    </figure>
+                    <h2 v-text="lesson.subject"></h2>
+                    <p><strong>Location:</strong> {{ lesson.location }}</p>
+                    <p><strong>Description:</strong> {{ lesson.description }}</p>
+                    <p><strong>Duration:</strong> {{ lesson.duration }} weeks</p>
+                    <p><strong>Price:</strong> £{{ lesson.price }}</p>
+                    <p><strong>Available Spaces:</strong> {{ lesson.availablespace }}</p>
+                    <button v-on:click="addToCart(lesson)" v-bind:disabled="!lesson.availablespace">
+                        Add to Cart
+                    </button>
+                    <p v-if="!lesson.availablespace" style="color: red;">Fully booked!</p>
+                </div>
+            </div>
+
+<!-- gg -->
+            <div v-else>
+                <h2>Checkout</h2>
+                <ul>
+                    <li v-for="lesson in cart" :key="lesson.id">
+                        {{ lesson.subject }} - £{{ lesson.price }}
+                        <button v-on:click="removeFromCart(lesson)">Remove</button>
+                    </li>
+                </ul>
+                <p><strong>Total Price: £{{ totalPrice }}</strong></p>
+
+                <h3>Registration Form</h3>
+                <form @submit.prevent="submitCheckout">
+                    <p>
+                        <label for="firstName"><strong>First Name:</strong></label>
+                        <input id="firstName" v-model.trim="registration.firstName" type="text" required @input="validateName('firstName')">
+                    </p>
+                    <p>
+                        <label for="lastName"><strong>Last Name:</strong></label>
+                        <input id="lastName" v-model.trim="registration.lastName" type="text" required @input="validateName('lastName')">
+                    </p>
+                    <p>
+                        <label for="email"><strong>Email:</strong></label>
+                        <input id="email" v-model.trim="registration.email" type="email" required>
+                    </p>
+                    <p>
+                        <label for="phone"><strong>Phone Number:</strong></label>
+                        <input id="phone" v-model.trim="registration.phone" type="tel" required @input="validatePhone">
+                    </p>
+                    <p>
+                        <label for="address"><strong>Address:</strong></label>
+                        <textarea id="address" v-model.trim="registration.address" required></textarea>
+                    </p>
+                    <p>
+                        <label for="city"><strong>City:</strong></label>
+                        <input id="city" v-model.trim="registration.city" type="text" required>
+                    </p>
+                    <p>
+                        <label for="zipCode"><strong>Zip Code:</strong></label>
+                        <input id="zipCode" v-model.trim="registration.zipCode" type="text" required>
+                    </p>
+
+                    <button type="submit" :disabled="!isFormValid">Complete Checkout</button>
+                    <button type="button" v-on:click="toggleCheckout">Back to Classes</button>
+                </form>
+            </div>
+        </main>
+    </div>
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                sortKey: "subject", 
+                sitename: "Martial Arts Academy",
+                showClasses: true,
+                cart: [],
+                lessons: [],
+                searchQuery: "",
+                registration: {
+                    firstName: "",
+                    lastName: "",
+                    email: "",
+                    phone: "",
+                    address: "",
+                    city: "",
+                    zipCode: "",
+                },
+                sortOrder: "asc",  
+            },
+            created() {
+                fetch("http://localhost:3000/collections/Lessons")
+                    .then(response => response.json())
+                    .then(json => this.lessons = json)
+                    .catch(error => console.error(error));
+            },
+            computed: {
+                cartItemCount() {
+                    return this.cart.length;
+                },
+                totalPrice() {
+                    return this.cart.reduce((acc, lesson) => acc + lesson.price, 0);
+                },
+                filteredLessons() {
+                    return this.lessons.filter(lesson => {
+                        const query = this.searchQuery.toLowerCase();
+                        return (
+                            lesson.subject.toLowerCase().includes(query) || 
+                            lesson.location.toLowerCase().includes(query)
+                        );
+                    });
+                },
+                isFormValid() {
+                    return Object.values(this.registration).every(field => field.trim() !== '');
+                }
+            },
+            methods: {
+                toggleCheckout() {
+                    this.showClasses = !this.showClasses;
+                },
+                addToCart(lesson) {
+                    this.cart.push(lesson);
+                    lesson.availablespace--;
+                },
+                removeFromCart(lesson) {
+                    const index = this.cart.indexOf(lesson);
+                    if (index > -1) {
+                        this.cart.splice(index, 1);
+                        lesson.availablespace++;
+                    }
+                },
+                submitCheckout() {
+                    if (!this.isFormValid) {
+                    alert("Please fill in all required fields.");
+                    return;
+                }
+
+                fetch("http://localhost:3000/collections/orders", {
+                    method: "POST",
+                    headers: {
+                    "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(this.registration)
+                })
+                    .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Failed to submit order.");
+                    }
+                    return response.json();
+                    })
+                    .then(data => {
+                    alert(`Checkout Complete! Order ID: ${data.orderId}`);
+                    this.cart = [];
+                    this.resetForm();
+                    this.toggleCheckout();
+                    })
+                    .catch(error => {
+                    alert("There was an issue with the order submission: " + error.message);
+                    });
+                },
+                validateName(field) {
+                    const nameRegExp = /^[A-Za-z\s]+$/;
+                    if (!nameRegExp.test(this.registration[field])) {
+                        alert(`${field} can only contain letters and spaces`);
+                    }
+                },
+                validatePhone() {
+                    const phoneRegExp = /^\d{10}$/;
+                    if (!phoneRegExp.test(this.registration.phone)) {
+                        alert("Phone number must be 10 digits.");
+                    }
+                },
+                sortLessons() {
+                    this.lessons.sort((a, b) => {
+                        let comparison = 0;
+                        if (a[this.sortKey] > b[this.sortKey]) {
+                            comparison = 1;
+                        } else if (a[this.sortKey] < b[this.sortKey]) {
+                            comparison = -1;
+                        }
+                        return this.sortOrder === "asc" ? comparison : -comparison;
+                    });
+                },
+            }
+        });
+    </script>
+</body>
+</html>
